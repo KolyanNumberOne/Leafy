@@ -3,6 +3,7 @@ package com.example.leafy
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,13 +26,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.leafy.ui.theme.PlantGuideTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +43,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PlantGuideTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    PlantListScreen()
+                    Navigation()
                 }
             }
         }
@@ -47,9 +51,19 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PlantListScreen(plantViewModel: PlantViewModel = viewModel()) {
+fun Navigation(plantViewModel: PlantViewModel = viewModel()){
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "mainPage") {
+        composable("mainPage") { PlantListScreen(plantViewModel, navController) }
+        composable("addPlant") { AddPlantScreen({ newPlant ->
+            plantViewModel.addPlant(newPlant)
+        }, navController) }
+    }
+}
+
+@Composable
+fun PlantListScreen(plantViewModel: PlantViewModel, navController: NavController) {
     val plants by plantViewModel.allPlants.collectAsState(initial = emptyList())
-    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -67,17 +81,11 @@ fun PlantListScreen(plantViewModel: PlantViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { showDialog = true },
+            onClick = { navController.navigate("addPlant") },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Добавить растение")
         }
-    }
-    if (showDialog) {
-        AddPlantScreen(onPlantAdded = { newPlant ->
-            plantViewModel.addPlant(newPlant)
-            showDialog = false
-        })
     }
 
 }
@@ -98,8 +106,8 @@ fun PlantItem(plant: Plant) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun pre(){
-    PlantListScreen()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun pre(){
+//    PlantListScreen()
+//}
