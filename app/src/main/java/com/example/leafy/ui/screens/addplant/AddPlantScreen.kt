@@ -1,8 +1,7 @@
-package com.example.leafy
+package com.example.leafy.ui.screens.addplant
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -10,12 +9,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.leafy.data.local.database.Plant
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
 @Composable
-fun AddPlantScreen(onPlantAdded: (Plant) -> Unit, navController: NavController) {
+fun PreviewPlantScreen(){
+//    AddPlantScreen()
+}
+
+@Composable
+fun AddPlantScreen(addPlantViewModel: AddPlantViewModel = hiltViewModel(), navController: NavController) {
     var name by remember { mutableStateOf("") }
     var light by remember { mutableStateOf("") }
     var wateringFrequency by remember { mutableStateOf("7") }
@@ -52,8 +57,8 @@ fun AddPlantScreen(onPlantAdded: (Plant) -> Unit, navController: NavController) 
         Button(onClick = {
             if (name.isNotBlank() && light.isNotBlank() && wateringFrequency.isNotBlank()) {
                 val newPlant = Plant(name, light, wateringFrequency.toInt())
-                onPlantAdded(newPlant)
-                navController.navigate("mainPage")
+                addPlantViewModel.addPlant(newPlant)
+                navController.navigate("listplant")
             }
         }) {
             Text("Сохранить")
