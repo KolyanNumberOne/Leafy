@@ -1,8 +1,5 @@
-package com.example.leafy
+package com.example.leafy.ui.screens.listplant
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,74 +7,81 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.leafy.ui.theme.PlantGuideTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.example.leafy.data.local.database.Plant
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            PlantGuideTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    PlantListScreen()
-                }
-            }
-        }
-    }
+
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewListPlantScreen(){
+//    ListPlantScreen()
 }
 
-@Composable
-fun PlantListScreen(plantViewModel: PlantViewModel = viewModel()) {
-    val plants by plantViewModel.allPlants.collectAsState(initial = emptyList())
-    var showDialog by remember { mutableStateOf(false) }
 
+@Composable
+fun ListPlantScreen(plantViewModel: PlantViewModel = hiltViewModel(), navController: NavController) {
+    var showDialog by remember { mutableStateOf(false) }
+    val plants = plantViewModel.allPlants.collectAsLazyPagingItems()
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Ваши растения", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn {
-            items(plants) { plant ->
-                PlantItem(plant = plant)
+        LazyColumn(modifier = Modifier.height(600.dp)) {
+
+            items(plants.itemSnapshotList.size) { index ->
+                plants[index]?.let { PlantItem(plant = it) }
+            }
+
+            when {
+                plants.loadState.refresh is LoadState.Loading -> {
+                    item {
+                        CircularProgressIndicator()
+                    }
+                }
+                plants.loadState.refresh is LoadState.Error -> {
+                    item {
+                        Text("Ошибка при загрузке растений")
+                    }
+                }
+                plants.loadState.append is LoadState.Loading -> {
+                    item {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { showDialog = true },
+            onClick = { navController.navigate("addplant")},
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Добавить растение")
         }
-    }
-    if (showDialog) {
-        AddPlantScreen(onPlantAdded = { newPlant ->
-            plantViewModel.addPlant(newPlant)
-            showDialog = false
-        })
     }
 
 }
@@ -96,10 +100,4 @@ fun PlantItem(plant: Plant) {
             Text("Полив раз в ${plant.wateringFrequency} дней")
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun pre(){
-    PlantListScreen()
 }
