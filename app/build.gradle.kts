@@ -20,12 +20,12 @@ plugins {
 
 android {
     namespace = "com.example.leafy"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.leafy"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -114,6 +114,9 @@ dependencies {
     //Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
+    //JSON
+    implementation ("com.google.code.gson:gson:2.8.9")
 }
 
 hilt {
