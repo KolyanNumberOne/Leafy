@@ -12,11 +12,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.leafy.data.local.database.Plant
+import com.example.leafy.ui.theme.PlantGuideTheme
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewPlantScreen(){
-//    AddPlantScreen()
+    PlantGuideTheme {
+    }
 }
 
 @Composable
@@ -65,3 +67,6 @@ fun AddPlantScreen(addPlantViewModel: AddPlantViewModel = hiltViewModel(), navCo
         }
     }
 }
+
+
+

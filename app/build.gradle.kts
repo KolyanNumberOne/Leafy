@@ -1,3 +1,10 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+val apikeyPropertiesFile = rootProject.file("gradle/apikey.properties")
+val apikeyProperties = Properties()
+apikeyProperties.load(FileInputStream(apikeyPropertiesFile))
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -26,6 +33,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Add API key
+        buildConfigField("String", "API_KEY_TREFLE", apikeyProperties["API_KEY_TREFLE"].toString())
     }
 
     compileOptions {
@@ -39,6 +49,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -55,11 +66,11 @@ kapt {
 }
 
 dependencies {
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
-    implementation("androidx.activity:activity-compose:1.9.2")
-    implementation(platform("androidx.compose:compose-bom:2024.09.03"))
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation(platform("androidx.compose:compose-bom:2024.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -68,13 +79,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.03"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Navigation
-    val nav_version = "2.8.2"
+    val nav_version = "2.8.3"
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     // Room
@@ -95,6 +106,14 @@ dependencies {
     val paging_version = "3.3.2"
     implementation("androidx.paging:paging-runtime-ktx:$paging_version")
     implementation("androidx.paging:paging-compose:$paging_version")
+
+    //Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    //Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 }
 
 hilt {

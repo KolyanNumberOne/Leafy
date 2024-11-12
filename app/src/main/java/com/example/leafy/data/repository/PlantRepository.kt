@@ -1,10 +1,11 @@
-package com.example.leafy.data.local.repository
+package com.example.leafy.data.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.leafy.data.local.database.Plant
 import com.example.leafy.data.local.database.PlantDao
+import com.example.leafy.data.remote.api.RemotePlantDataSource
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -15,7 +16,8 @@ interface PlantRepository {
 }
 
 class PlantRepositoryImp @Inject constructor(
-    private val plantDao: PlantDao
+    private val plantDao: PlantDao,
+    private val remotePlantDataSource: RemotePlantDataSource
 ) : PlantRepository {
     override fun getAllPlants(): Flow<PagingData<Plant>> {
         return Pager(

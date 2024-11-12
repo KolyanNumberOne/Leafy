@@ -13,7 +13,7 @@ fun Navigation(){
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "listplant"){
-        composable("listplant")  { ListPlantScreen(navController = navController) }
+        composable("listplant")  { ListPlantScreen(/*navController = navController*/) }
         composable("addplant")  { AddPlantScreen(navController = navController) }
     }
 }

@@ -7,7 +7,6 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 
-
 @Entity(tableName = "plants")
 data class Plant(
     val name: String,

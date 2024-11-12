@@ -7,16 +7,29 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-private val DarkColorPalette = darkColorScheme(
-    primary = Green200,
-    secondary = Teal200
+private val LightColorPalette = lightColorScheme(
+    primary = Color(0xFF4CAF50),
+    secondary = Color(0xFF80CBC4),
+    background = Color(0xFFF0F4C3),
+    surface = Color(0xFFFFFFFF),
+    onPrimary = Color(0xFF000000),
+    onSecondary = Color(0xFF000000),
+    onBackground = Color(0xFF2E7D32),
+    onSurface = Color(0xFF000000)
 )
 
-private val LightColorPalette = lightColorScheme(
-    primary = Green500,
-    secondary = Teal200
+private val DarkColorPalette = darkColorScheme(
+    primary = Color(0xFFA5D6A7),
+    secondary = Color(0xFF80CBC4),
+    background = Color(0xFF1B5E20),
+    surface = Color(0xFF424242),
+    onPrimary = Color(0xFFFFFFFF),
+    onSecondary = Color(0xFFFFFFFF),
+    onBackground = Color(0xFFC8E6C9),
+    onSurface = Color(0xFFFFFFFF)
 )
 
 private val Shapes = Shapes(
