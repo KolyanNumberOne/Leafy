@@ -21,7 +21,7 @@ fun Navigation(){
         composable("addplant")  { AddPlantScreen(navController = navController) }
         composable("plantcard/{plantName}") { backStackEntry ->
             val plantName = backStackEntry.arguments?.getString("plantName")
-            PlantCardScreen(plantName = plantName ?: "")
+            PlantCardScreen(plantName = plantName ?: "", navController = navController)
         }
             /*"plantcard/{plant}",
             arguments = listOf(navArgument("plant") { type = NavType.StringType })  // Мы передаем строку JSON

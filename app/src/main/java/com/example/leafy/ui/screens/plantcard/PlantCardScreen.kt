@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,11 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.leafy.R
@@ -41,7 +45,7 @@ import com.example.leafy.ui.screens.listplant.PlantViewModel
 
 
 @Composable
-fun PlantCardScreen(plantName: String) {
+fun PlantCardScreen(plantName: String, navController: NavController) {
     var expanded by remember { mutableStateOf(false) }
     var expanded2 by remember { mutableStateOf(false) }
     var expanded3 by remember { mutableStateOf(false) }// Состояние для отслеживания развернутого текста
@@ -119,15 +123,24 @@ fun PlantCardScreen(plantName: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top=16.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Bottom
         ) {
+            Button(onClick = { navController.navigate("listplant")},
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.Start)
+                    .padding(start = 4.dp,top = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+            ) {
+                Text("<", color = Color(0xFF2E7D32), fontSize = 24.sp)
+            }
                 // Image(
                 //     bitmap = ImageBitmap.imageResource(plant.id), // URL изображения растени
                 //     contentDescription = "Name",
                 //     modifier = Modifier
-                //         .size(56.dp) // Размер изображения
-                //         .clip(CircleShape),// Фон для изображения
+                //         .size(56.dp)
+                //         .clip(CircleShape),
                 //     contentScale = ContentScale.Crop
                 // )
         }
