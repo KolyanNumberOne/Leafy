@@ -16,7 +16,7 @@ class RetrofitModule {
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl("https://trefle.io/api/v1/")
+        .baseUrl("https://plant.id/api/v3/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
