@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -27,48 +30,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.leafy.R
+import coil.compose.rememberAsyncImagePainter
+import com.example.leafy.ui.screens.listplant.PlantViewModel
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewPlantCardScreen() {
-    // Mock data for the preview
-    val plantName = "Aloe Vera"
-
-    // Using rememberNavController to satisfy NavController parameter in the preview
-    PlantCardScreen(
-        plantName = plantName,
-        navController = rememberNavController()
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewPlantCardScreen() {
+//    val plantName = "Aloe Vera"
+//
+//    PlantCardScreen(
+//        plantName = plantName,
+//        navController = rememberNavController()
+//    )
+//}
 
 @Composable
-fun PlantCardScreen(plantName: String, navController: NavController) {
+fun PlantCardScreen(plantName: String, navController: NavController, plantViewModel: PlantViewModel) {
+    val plant = plantViewModel.getCurrentPlant(plantName)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ){
+            Image(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Arrow Back",
+                modifier = Modifier
+                    .size(36.dp)
+                    .clickable { navController.popBackStack() }
+            )
+        }
         Text(
-            plantName,
+            plant.commonNames[0],
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Green
+            color = Color.DarkGray
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         Image(
-            bitmap = ImageBitmap.imageResource(R.drawable.img),
+            painter = rememberAsyncImagePainter(plant.image.value),
             contentDescription = "Name",
             modifier = Modifier
                 .size(200.dp)
@@ -83,14 +94,13 @@ fun PlantCardScreen(plantName: String, navController: NavController) {
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        GeneralInf()
+        GeneralInf(plant.description.value)
         Spacer(modifier = Modifier.height(16.dp))
-        ToggleView("Род", "Пример род" )
+        ToggleView("Все имена", plant.commonNames.joinToString(", "))
         Spacer(modifier = Modifier.height(12.dp))
         ToggleView("Семейство", "Пример семейства")
         Spacer(modifier = Modifier.height(12.dp))
         ToggleView("Уход", "Пример ухода")
-
     }
 }
 
@@ -119,6 +129,7 @@ fun ToggleView(categoryName: String, body: String) {
             Text(
                 categoryName,
                 fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp))
 
             Icon(
@@ -134,21 +145,26 @@ fun ToggleView(categoryName: String, body: String) {
 
 
         if (isVisible) {
-            Text(body, fontSize = 14.sp)
+            Text(
+                body,
+                fontSize = 16.sp,
+                color = Color.Black,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp))
         }
     }
 }
 
 @Composable
-fun GeneralInf(){
+fun GeneralInf(generalText: String){
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 8.dp, end = 8.dp)
     ) {
         Text(
-            "Какие-то основные факты",
+            generalText,
             fontSize = 14.sp,
+            color = Color.Black
         )
     }
 }

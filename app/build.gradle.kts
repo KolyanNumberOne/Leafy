@@ -14,8 +14,9 @@ plugins {
     // Hilt
     id("com.google.dagger.hilt.android") version "2.52"
 
-    // id("org.jetbrains.kotlin.android") version "2.1.0-Beta1"
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.20"
+
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 android {
@@ -35,7 +36,7 @@ android {
         }
 
         // Add API key
-        buildConfigField("String", "API_KEY_TREFLE", apikeyProperties["API_KEY_TREFLE"].toString())
+        buildConfigField("String", "API_KEY", apikeyProperties["API_KEY"].toString())
     }
 
     compileOptions {
@@ -115,8 +116,14 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
-    //JSON
-    implementation ("com.google.code.gson:gson:2.8.9")
+    //Serialization
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation ("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+
+    implementation("io.coil-kt:coil-compose:2.0.0-rc01")
 }
 
 hilt {

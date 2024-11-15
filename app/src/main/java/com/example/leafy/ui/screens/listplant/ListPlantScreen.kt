@@ -20,10 +20,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -31,9 +33,12 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,27 +49,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.leafy.R
+import androidx.paging.compose.collectAsLazyPagingItems
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import com.example.leafy.data.models.PlantDetail
 
 
-/*@Preview(showBackground = true)
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewListPlantScreen(){
+//    PlantGuideTheme {
+//        ListPlantScreen(navController = rememberNavController())
+//    }
+//}
+
 @Composable
-fun PreviewListPlantScreen(){
-    PlantGuideTheme {
-        ListPlantScreen()
-    }
-}*/
-
-@Composable
-fun ListPlantScreen(navController: NavController){
+fun ListPlantScreen(plantViewModel: PlantViewModel, navController: NavController){
     Column(modifier = Modifier
         .background(MaterialTheme.colorScheme.primary)){
 
@@ -111,29 +117,27 @@ fun ListPlantScreen(navController: NavController){
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
                     text = { Text(text = title) },
+                    unselectedContentColor = Color.LightGray,
+                    selectedContentColor = Color.Green
                 )
             }
         }
 
         Spacer(modifier = Modifier.size(8.dp))
 
-        if (selectedTabIndex == 0) MyPlants(navController) else AllPlants(navController)
-
-
-
+        if (selectedTabIndex == 0) MyPlants(plantViewModel, onTabChange = { selectedTabIndex = it }, navController) else AllPlants(plantViewModel, navController)
 
     }
 }
 
 
 @Composable
-fun PlantItem(/*plant: Plant*/plantName: String, navController: NavController) {
-    //val plantJson = toJson(plantName)
+fun PlantItem(plant: PlantDetail, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable( onClick = {navController.navigate("plantcard/$plantName")}),
+            .clickable( onClick = {navController.navigate("plantcard/${plant.commonNames[0]}")}),
 
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -143,60 +147,117 @@ fun PlantItem(/*plant: Plant*/plantName: String, navController: NavController) {
                 .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                bitmap = ImageBitmap.imageResource(R.drawable.img),
+            ImageWithLoading(plant.image.value)
+            /*Image(
+                painter = rememberAsyncImagePainter(plant.image.value),
                 contentDescription = "Имя",
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(shape = RoundedCornerShape(32.dp))
+                    .clip(shape = RoundedCornerShape(16.dp))
                     .border(
                         width = 1.dp,
                         color = Color.Black,
-                        shape = RoundedCornerShape(32.dp)
-                    )
-                    .padding(8.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
                 contentScale = ContentScale.Crop
-            )
+            )*/
 
             Spacer(modifier = Modifier.size(16.dp))
 
             Column(modifier = Modifier.padding(16.dp)) {
 
-                Text(plantName, style = MaterialTheme.typography.titleMedium)
-                Text("Вид: ")
+                Text(plant.commonNames[0], style = MaterialTheme.typography.titleMedium)
+                Text("Род:  ${plant.taxonomy.genus}")
+                Text("Семейство:  ${plant.taxonomy.family}")
 
             }
         }
 
     }
 }
+@Composable
+fun ImageWithLoading(plantImage: String) {
+    val painter = rememberAsyncImagePainter(
+        model = plantImage,
+        onState = { state ->
+            when (state) {
+                is AsyncImagePainter.State.Loading -> {
+                    // Можно здесь добавить логику, если нужно
+                }
+                is AsyncImagePainter.State.Error -> {
+                    // Логика на случай ошибки загрузки
+                }
+                else -> Unit
+            }
+        }
+    )
+
+    var isLoading by remember { mutableStateOf(true) }
+
+    Box(modifier = Modifier.size(80.dp)) {
+        Image(
+            painter = painter,
+            contentDescription = "Имя",
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape = RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = Color.Black,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentScale = ContentScale.Crop
+        )
+
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(24.dp),
+                color = Color.Gray
+            )
+        }
+
+        LaunchedEffect(painter.state) {
+            isLoading = painter.state is AsyncImagePainter.State.Loading
+        }
+    }
+}
 
 @Composable
-fun MyPlants(navController: NavController){
+fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navController: NavController){
     Spacer(modifier = Modifier.height(8.dp))
 
-    //val listPlant = plantViewModel.allPlants.collectAsLazyPagingItems()
-    val listPlant = listOf("имя1", "имя2", "имя3", "имя4", "имя5", "имя6")
+    val listPlant = plantViewModel.allPlants.collectAsLazyPagingItems()
+
+    var showAddPlantDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp)
     ) {
-        // Список растений в LazyColumn
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            items(listPlant.size) { index ->
-                PlantItem(plantName = listPlant[index], navController = navController)
+            if (listPlant.itemCount == 0){
+                item { Text(
+                    "У вас пока нет растений",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White)
+                }
+            }
+            else{
+                items(listPlant.itemCount) { index ->
+                    //PlantItem(plant = listPlant[index], navController = navController)
+                }
             }
         }
-
-        // Кнопка добавления поверх списка
         Button(
-            onClick = { navController.navigate("addplant") },
+            onClick = { showAddPlantDialog = true },
             shape = CircleShape,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -207,11 +268,34 @@ fun MyPlants(navController: NavController){
             Text("+", color = Color.Black, fontSize = 24.sp)
         }
     }
+    if (showAddPlantDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddPlantDialog = false },
+            title = { Text("Добавить растение") },
+            text = { Text("Выберите, как вы хотите добавить растение:") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAddPlantDialog = false
+                    //navController.navigate("addplant_photo")
+                }) {
+                    Text("По фото")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAddPlantDialog = false
+                    onTabChange(1)
+                }) {
+                    Text("Поиск")
+                }
+            }
+        )
+    }
 }
 @Composable
-fun AllPlants(navController: NavController){
+fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
     var searchText by remember { mutableStateOf("") }
-    val listPlant = listOf("имя1", "имя2", "имя3", "имя4", "имя5", "имя6")
+    val listPlant = plantViewModel.plantDetailList.collectAsState()
 
     Row(
         modifier = Modifier
@@ -248,18 +332,20 @@ fun AllPlants(navController: NavController){
             modifier = Modifier
                 .size(36.dp)
                 .offset(x = (-12).dp)
-                .clickable { },
+                .clickable { plantViewModel.searchPlants(query = searchText) },
             tint = Color.White
         )
     }
 
+    Spacer(modifier = Modifier.height(8.dp))
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
     ) {
-        items(listPlant.size) { index ->
-            PlantItem(plantName = listPlant[index], navController = navController)
+        items(listPlant.value.size) { index ->
+            PlantItem(plant= listPlant.value[index], navController = navController)
         }
     }
 }
+
