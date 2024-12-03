@@ -11,12 +11,12 @@ import com.example.leafy.ui.screens.listplant.PlantViewModel
 import com.example.leafy.ui.screens.plantcard.PlantCardScreen
 
 @Composable
-fun Navigation(){
+fun Navigation(onThemeToggle: (Boolean) -> Unit, isDarkTheme: Boolean){
 
     val navController = rememberNavController()
     val plantViewModel: PlantViewModel = hiltViewModel()
     NavHost(navController = navController, startDestination = "listplant"){
-        composable("listplant")  { ListPlantScreen(plantViewModel = plantViewModel, navController = navController) }
+        composable("listplant")  { ListPlantScreen(plantViewModel = plantViewModel, navController = navController, isDarkTheme = isDarkTheme, onThemeToggle = onThemeToggle) }
         composable("addplant")  { AddPlantScreen(navController = navController) }
         composable("plantcard/{plantName}") { backStackEntry ->
             val plantName = backStackEntry.arguments?.getString("plantName")

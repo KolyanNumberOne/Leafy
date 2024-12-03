@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.leafy.data.models.PlantDetail
+import com.example.leafy.ui.theme.PlantGuideTheme
 
 
 //@Preview(showBackground = true)
@@ -69,66 +72,74 @@ import com.example.leafy.data.models.PlantDetail
 //    }
 //}
 
+
 @Composable
-fun ListPlantScreen(plantViewModel: PlantViewModel, navController: NavController){
-    Column(modifier = Modifier
-        .background(MaterialTheme.colorScheme.primary)){
-
-        var checked by remember { mutableStateOf(true) }
-        var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-        val titles = listOf("Мои растения", "Все растения ")
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+fun ListPlantScreen(plantViewModel: PlantViewModel, navController: NavController,isDarkTheme: Boolean,
+                    onThemeToggle: (Boolean) -> Unit) {
+    var checked by remember { mutableStateOf(true) }
+    /*PlantGuideTheme(darkTheme = checked) {*/
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.primary)
         ) {
 
-            Text(
-                "Leafy",
-                modifier = Modifier.padding(start = 16.dp),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                color = Color.White)
+            var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+            val titles = listOf("Мои растения", "Все растения ")
 
-            Switch(
-                modifier = Modifier.padding(end = 16.dp),
-                checked = checked,
-                onCheckedChange = {
-                    checked = it
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.Green,
-                    uncheckedThumbColor = Color.Red,
-                    checkedBorderColor = Color.Black,
-                    uncheckedBorderColor = Color.White,
-                    checkedTrackColor = Color.DarkGray,
-                    uncheckedTrackColor = Color.Yellow
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    "Leafy",
+                    modifier = Modifier.padding(start = 16.dp),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White
                 )
 
-            )
-        }
+                Switch(
+                    modifier = Modifier.padding(end = 16.dp),
+                    checked = isDarkTheme,
+                    onCheckedChange = onThemeToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.Green,
+                        uncheckedThumbColor = Color.Red,
+                        checkedBorderColor = Color.Black,
+                        uncheckedBorderColor = Color.Black,
+                        checkedTrackColor = Color.DarkGray,
+                        uncheckedTrackColor = Color.White
+                    )
 
-
-        TabRow(selectedTabIndex = selectedTabIndex) {
-            titles.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(text = title) },
-                    unselectedContentColor = Color.LightGray,
-                    selectedContentColor = Color.Green
                 )
             }
+
+
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                titles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(text = title) },
+                        unselectedContentColor = Color.LightGray,
+                        selectedContentColor = Color.Green
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.size(8.dp))
+
+            if (selectedTabIndex == 0) MyPlants(
+                plantViewModel,
+                onTabChange = { selectedTabIndex = it },
+                navController
+            ) else AllPlants(plantViewModel, navController)
+
         }
-
-        Spacer(modifier = Modifier.size(8.dp))
-
-        if (selectedTabIndex == 0) MyPlants(plantViewModel, onTabChange = { selectedTabIndex = it }, navController) else AllPlants(plantViewModel, navController)
-
     }
-}
 
 
 @Composable
@@ -137,7 +148,7 @@ fun PlantItem(plant: PlantDetail, navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable( onClick = {navController.navigate("plantcard/${plant.commonNames[0]}")}),
+            .clickable(onClick = { navController.navigate("plantcard/${plant.commonNames[0]}") }),
 
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -278,7 +289,7 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
                     showAddPlantDialog = false
                     //navController.navigate("addplant_photo")
                 }) {
-                    Text("По фото")
+                    Text("По фото", color = Color(0xFF4BA34F))
                 }
             },
             dismissButton = {
@@ -286,7 +297,7 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
                     showAddPlantDialog = false
                     onTabChange(1)
                 }) {
-                    Text("Поиск")
+                    Text("Поиск", color = Color(0xFF4BA34F))
                 }
             }
         )

@@ -52,6 +52,7 @@ import com.example.leafy.ui.screens.listplant.PlantViewModel
 @Composable
 fun PlantCardScreen(plantName: String, navController: NavController, plantViewModel: PlantViewModel) {
     val plant = plantViewModel.getCurrentPlant(plantName)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -74,7 +75,7 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             plant.commonNames[0],
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.DarkGray
+
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -148,7 +149,7 @@ fun ToggleView(categoryName: String, body: String) {
             Text(
                 body,
                 fontSize = 16.sp,
-                color = Color.Black,
+
                 modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp))
         }
     }
@@ -164,7 +165,7 @@ fun GeneralInf(generalText: String){
         Text(
             generalText,
             fontSize = 14.sp,
-            color = Color.Black
+
         )
     }
 }
