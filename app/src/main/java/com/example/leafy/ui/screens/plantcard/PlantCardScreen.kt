@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -97,11 +99,33 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
         Spacer(modifier = Modifier.height(16.dp))
         GeneralInf(plant.description.value)
         Spacer(modifier = Modifier.height(16.dp))
-        ToggleView("Все имена", plant.commonNames.joinToString(", "))
-        Spacer(modifier = Modifier.height(12.dp))
-        ToggleView("Семейство", "Пример семейства")
-        Spacer(modifier = Modifier.height(12.dp))
-        ToggleView("Уход", "Пример ухода")
+
+        if (!plant.commonNames.isNullOrEmpty()) {
+            ToggleView("Все имена", plant.commonNames.joinToString(", "))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+        if (!plant.taxonomy.family.isNullOrBlank()) {
+            ToggleView("Семейство", plant.taxonomy.family)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+
+        if (!plant.bestWatering.isNullOrBlank()){
+            ToggleView("Полив", plant.bestWatering )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+        if (!plant.bestSoilType.isNullOrBlank()) {
+            ToggleView("Почва", plant.bestSoilType)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+        if (!plant.bestLightCondition.isNullOrBlank()) {
+            ToggleView("Освещение", plant.bestLightCondition)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+
+
+
     }
 }
 
@@ -129,7 +153,7 @@ fun ToggleView(categoryName: String, body: String) {
 
             Text(
                 categoryName,
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 8.dp))
 
@@ -146,8 +170,15 @@ fun ToggleView(categoryName: String, body: String) {
 
 
         if (isVisible) {
+            Divider(
+                color = Color.Gray.copy(alpha = 0.5f),
+                thickness = 2.dp,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 body,
+                textAlign = TextAlign.Justify,
                 fontSize = 16.sp,
 
                 modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp))
@@ -157,6 +188,7 @@ fun ToggleView(categoryName: String, body: String) {
 
 @Composable
 fun GeneralInf(generalText: String){
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,6 +196,7 @@ fun GeneralInf(generalText: String){
     ) {
         Text(
             generalText,
+            textAlign = TextAlign.Justify,
             fontSize = 14.sp,
 
         )
