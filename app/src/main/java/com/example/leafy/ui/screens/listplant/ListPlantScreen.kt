@@ -64,6 +64,7 @@ import com.example.leafy.data.models.PlantDetail
 import com.example.leafy.ui.theme.PlantGuideTheme
 
 
+
 //@Preview(showBackground = true)
 //@Composable
 //fun PreviewListPlantScreen(){
@@ -287,7 +288,7 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
             confirmButton = {
                 TextButton(onClick = {
                     showAddPlantDialog = false
-                    //navController.navigate("addplant_photo")
+                    navController.navigate("camera")
                 }) {
                     Text("По фото", color = Color(0xFF4BA34F))
                 }
