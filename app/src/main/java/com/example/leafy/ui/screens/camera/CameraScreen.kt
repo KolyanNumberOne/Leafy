@@ -18,6 +18,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material3.Card
@@ -71,6 +73,16 @@ fun CameraScreen(viewModel: CameraViewModel = hiltViewModel(), navController: Na
                     imageCapture = imageCapture,
                     lifecycleOwner = lifecycleOwner
                 )
+                IconButton(onClick = {(navController.popBackStack())},
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Вернуться назад"
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -90,7 +102,8 @@ fun CameraScreen(viewModel: CameraViewModel = hiltViewModel(), navController: Na
                         Icon(
                             Icons.Outlined.Camera,
                             contentDescription = "Сделать фото",
-                            modifier = Modifier.size(48.dp))
+                            modifier = Modifier.size(48.dp)
+                        )
                     }
 
                     IconButton(onClick = { galleryLauncher.launch("image/*") }) {
