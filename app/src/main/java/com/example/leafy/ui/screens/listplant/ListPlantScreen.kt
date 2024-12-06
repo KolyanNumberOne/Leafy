@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -46,39 +46,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.leafy.data.models.PlantDetail
-import com.example.leafy.ui.theme.PlantGuideTheme
-
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewListPlantScreen(){
-//    PlantGuideTheme {
-//        ListPlantScreen(navController = rememberNavController())
-//    }
-//}
 
 
 @Composable
-fun ListPlantScreen(plantViewModel: PlantViewModel, navController: NavController,isDarkTheme: Boolean,
-                    onThemeToggle: (Boolean) -> Unit) {
+fun ListPlantScreen(
+    plantViewModel: PlantViewModel,
+    navController: NavController,
+    isDarkTheme: Boolean,
+    onThemeToggle: (Boolean) -> Unit)
+{
     var checked by remember { mutableStateOf(true) }
-    /*PlantGuideTheme(darkTheme = checked) {*/
+
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primary)
@@ -160,19 +152,6 @@ fun PlantItem(plant: PlantDetail, navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             ImageWithLoading(plant.image.value)
-            /*Image(
-                painter = rememberAsyncImagePainter(plant.image.value),
-                contentDescription = "Имя",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(shape = RoundedCornerShape(16.dp))
-                    .border(
-                        width = 1.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                contentScale = ContentScale.Crop
-            )*/
 
             Spacer(modifier = Modifier.size(16.dp))
 
@@ -194,10 +173,8 @@ fun ImageWithLoading(plantImage: String) {
         onState = { state ->
             when (state) {
                 is AsyncImagePainter.State.Loading -> {
-                    // Можно здесь добавить логику, если нужно
                 }
                 is AsyncImagePainter.State.Error -> {
-                    // Логика на случай ошибки загрузки
                 }
                 else -> Unit
             }
@@ -240,10 +217,10 @@ fun ImageWithLoading(plantImage: String) {
 fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navController: NavController){
     Spacer(modifier = Modifier.height(8.dp))
 
-    val listPlant = plantViewModel.allPlants.collectAsLazyPagingItems()
+    //val listPlant = plantViewModel.allPlants.collectAsLazyPagingItems()
+    val listPlant = plantViewModel.allPlants.collectAsState(emptyList())
 
     var showAddPlantDialog by remember { mutableStateOf(false) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -254,7 +231,7 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            if (listPlant.itemCount == 0){
+            if (listPlant.value.isEmpty()){
                 item { Text(
                     "У вас пока нет растений",
                     fontSize = 18.sp,
@@ -263,8 +240,8 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
                 }
             }
             else{
-                items(listPlant.itemCount) { index ->
-                    //PlantItem(plant = listPlant[index], navController = navController)
+                items(listPlant.value.size) { index ->
+                    PlantItem(plant= listPlant.value[index], navController = navController)
                 }
             }
         }
@@ -307,7 +284,10 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
 @Composable
 fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
     var searchText by remember { mutableStateOf("") }
-    val listPlant = plantViewModel.plantDetailList.collectAsState()
+    val listPlant = plantViewModel.searchList.collectAsState()
+    val listState = rememberLazyListState()
+    val isLoading = remember { plantViewModel.isLoading }
+    var page by remember { mutableIntStateOf(1) }
 
     Row(
         modifier = Modifier
@@ -326,7 +306,11 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
     ) {
         TextField(
             value = searchText,
-            onValueChange = {searchText=it},
+            onValueChange = {
+                searchText=it
+                page = 1
+                plantViewModel.searchPlants(name = searchText, page = page)
+                            },
             placeholder = { Text("Поиск растений") },
             modifier = Modifier.weight(1f),
             singleLine = true,
@@ -344,13 +328,15 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
             modifier = Modifier
                 .size(36.dp)
                 .offset(x = (-12).dp)
-                .clickable { plantViewModel.searchPlants(query = searchText) },
+                .clickable { plantViewModel.searchPlants(name = searchText, page = page) },
             tint = Color.Gray
         )
     }
 
     Spacer(modifier = Modifier.height(8.dp))
+
     LazyColumn(
+        state = listState,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
@@ -358,6 +344,31 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
         items(listPlant.value.size) { index ->
             PlantItem(plant= listPlant.value[index], navController = navController)
         }
+        if (isLoading) {
+            item {
+                Box(
+                    modifier = Modifier.size(60.dp),
+                    contentAlignment = Alignment.Center
+                ){
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(32.dp),
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo }
+            .collect { layoutInfo ->
+                val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
+                if (lastVisibleItem != null && lastVisibleItem.index == listPlant.value.size - 1) {
+                    page++
+                    plantViewModel.searchPlants(name = searchText, page = page)
+                }
+            }
     }
 }
 

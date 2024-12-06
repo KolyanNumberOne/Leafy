@@ -27,6 +27,8 @@ class DatabaseModule {
             appContext,
             AppDatabase::class.java,
             "Plants"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 }

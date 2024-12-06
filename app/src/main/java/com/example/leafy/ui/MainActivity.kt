@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
             PlantGuideTheme(darkTheme = isDarkTheme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     Navigation(
-                        onThemeToggle = { isDarkTheme = it }, // Передаем функцию переключения
+                        onThemeToggle = { isDarkTheme = it },
                         isDarkTheme = isDarkTheme)
                 }
             }
