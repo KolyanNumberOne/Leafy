@@ -108,7 +108,8 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             ToggleView("Классификация", "Семейство: ${plant.taxonomy.family}\n" +
                     "Род: ${plant.taxonomy.genus}\n" +
                     "Тип: ${plant.taxonomy.phylum}\n" +
-                    "Порядок: ${plant.taxonomy.order}\n"
+                    "Порядок: ${plant.taxonomy.order}\n" +
+                    "Царство: ${plant.taxonomy.kingdom}\n"
                     )
             Spacer(modifier = Modifier.height(12.dp))
         }
