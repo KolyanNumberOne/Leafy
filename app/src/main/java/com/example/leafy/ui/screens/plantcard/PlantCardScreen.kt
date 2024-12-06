@@ -3,6 +3,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +26,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -78,15 +81,55 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ){
             Image(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Arrow Back",
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
                 modifier = Modifier
                     .size(36.dp)
                     .clickable { navController.popBackStack() }
             )
+            var expanded by remember { mutableStateOf(false) }
+            Box() {
+                IconButton(onClick = { expanded = true }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Menu",
+                        modifier = Modifier.size(36.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    if (plant.id == 0) {
+                        DropdownMenuItem(
+                            text = { Text("Добавить растение") },
+                            onClick = {
+                                expanded = false
+                                plantViewModel.addPlant(plant)
+                            }
+                        )
+                    }
+                    if (plant.id != 0) {
+                        DropdownMenuItem(
+                            text = { Text("Удалить растение") },
+                            onClick = {
+                                expanded = false
+                                plantViewModel.deletePlant(plant)
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+                }
+            }
+
         }
         Text(
             plant.commonNames[0],
