@@ -20,7 +20,7 @@ fun Navigation(onThemeToggle: (Boolean) -> Unit, isDarkTheme: Boolean){
     NavHost(navController = navController, startDestination = "listplant"){
         composable("listplant")  { ListPlantScreen(plantViewModel = plantViewModel, navController = navController, isDarkTheme = isDarkTheme, onThemeToggle = onThemeToggle) }
         composable("addplant")  { AddPlantScreen(navController = navController) }
-        composable("camera") { CameraScreen()}
+        composable("camera") { CameraScreen(viewModel = hiltViewModel(), navController = navController)}
         composable("plantcard/{plantName}") { backStackEntry ->
             val plantName = backStackEntry.arguments?.getString("plantName")
             PlantCardScreen(plantName = plantName ?: "", plantViewModel = plantViewModel, navController = navController)

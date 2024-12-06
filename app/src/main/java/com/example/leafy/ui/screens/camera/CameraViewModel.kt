@@ -5,10 +5,8 @@ import androidx.camera.core.ImageCaptureException
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
-import kotlinx.coroutines.launch
 import java.io.File
 
 class CameraViewModel : ViewModel() {
