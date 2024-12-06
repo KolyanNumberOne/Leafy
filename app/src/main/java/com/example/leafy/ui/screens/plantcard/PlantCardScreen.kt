@@ -105,10 +105,33 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             Spacer(modifier = Modifier.height(12.dp))
         }
         if (!plant.taxonomy.family.isNullOrBlank()) {
-            ToggleView("Семейство", plant.taxonomy.family)
+            ToggleView("Классификация", "Семейство: ${plant.taxonomy.family}\n" +
+                    "Род: ${plant.taxonomy.genus}\n" +
+                    "Тип: ${plant.taxonomy.phylum}\n" +
+                    "Порядок: ${plant.taxonomy.order}\n"
+                    )
             Spacer(modifier = Modifier.height(12.dp))
         }
 
+        if (!plant.commonUses.isNullOrBlank()){
+            ToggleView("Использование", plant.commonUses )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.culturalSignificance.isNullOrBlank()){
+            ToggleView("Культурная значимость", plant.culturalSignificance )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.edible_parts.isNullOrEmpty()){
+            ToggleView("Съедобные части", plant.edible_parts.joinToString(", ") )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.propagationMethods.isNullOrEmpty()){
+            ToggleView("Методы распространения", plant.propagationMethods)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         if (!plant.bestWatering.isNullOrBlank()){
             ToggleView("Полив", plant.bestWatering )
@@ -122,8 +145,6 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             ToggleView("Освещение", plant.bestLightCondition)
             Spacer(modifier = Modifier.height(12.dp))
         }
-
-
 
 
     }
