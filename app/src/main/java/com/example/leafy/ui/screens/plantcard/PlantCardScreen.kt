@@ -1,5 +1,6 @@
 package com.example.leafy.ui.screens.plantcard
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -72,17 +73,10 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
         )
         return
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column (modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth().background(color = MaterialTheme.colorScheme.background).padding(start = 12.dp, end = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ){
@@ -129,90 +123,93 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
                     }
                 }
             }
-
         }
-        Text(
-            plant.commonNames[0],
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Image(
-            painter = rememberAsyncImagePainter(plant.image.value),
-            contentDescription = "Name",
+        Column(
             modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .align(Alignment.CenterHorizontally)
-                .border(
-                    width = 1.dp,
-                    color = Color.Black,
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            contentScale = ContentScale.Crop
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                plant.commonNames[0],
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
 
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+                )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (!plant.description.value.isNullOrEmpty()) {
-            GeneralInf(plant.description.value)
+            Image(
+                painter = rememberAsyncImagePainter(plant.image.value),
+                contentDescription = "Name",
+                modifier = Modifier
+                    .size(200.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .align(Alignment.CenterHorizontally)
+                    .border(
+                        width = 1.dp,
+                        color = Color.Black,
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentScale = ContentScale.Crop
+
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (!plant.description.value.isNullOrEmpty()) {
+                GeneralInf(plant.description.value)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (!plant.commonNames.isNullOrEmpty()) {
+                ToggleView("Все имена", plant.commonNames.joinToString(", "))
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            if (!plant.taxonomy.family.isNullOrBlank()) {
+                ToggleView("Классификация", "Семейство: ${plant.taxonomy.family}\n" +
+                        "Род: ${plant.taxonomy.genus}\n" +
+                        "Тип: ${plant.taxonomy.phylum}\n" +
+                        "Порядок: ${plant.taxonomy.order}\n" +
+                        "Царство: ${plant.taxonomy.kingdom}\n"
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (!plant.commonUses.isNullOrBlank()){
+                ToggleView("Использование", plant.commonUses )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (!plant.culturalSignificance.isNullOrBlank()){
+                ToggleView("Культурная значимость", plant.culturalSignificance )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (!plant.edibleParts.isNullOrEmpty()){
+                ToggleView("Съедобные части", plant.edibleParts.joinToString(", ") )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (!plant.propagationMethods.isNullOrEmpty()){
+                ToggleView("Методы распространения", plant.propagationMethods.joinToString(", "))
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+
+            if (!plant.bestWatering.isNullOrBlank()){
+                ToggleView("Полив", plant.bestWatering )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            if (!plant.bestSoilType.isNullOrBlank()) {
+                ToggleView("Почва", plant.bestSoilType)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            if (!plant.bestLightCondition.isNullOrBlank()) {
+                ToggleView("Освещение", plant.bestLightCondition)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (!plant.commonNames.isNullOrEmpty()) {
-            ToggleView("Все имена", plant.commonNames.joinToString(", "))
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-        if (!plant.taxonomy.family.isNullOrBlank()) {
-            ToggleView("Классификация", "Семейство: ${plant.taxonomy.family}\n" +
-                    "Род: ${plant.taxonomy.genus}\n" +
-                    "Тип: ${plant.taxonomy.phylum}\n" +
-                    "Порядок: ${plant.taxonomy.order}\n" +
-                    "Царство: ${plant.taxonomy.kingdom}\n"
-                    )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (!plant.commonUses.isNullOrBlank()){
-            ToggleView("Использование", plant.commonUses )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (!plant.culturalSignificance.isNullOrBlank()){
-            ToggleView("Культурная значимость", plant.culturalSignificance )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (!plant.edibleParts.isNullOrEmpty()){
-            ToggleView("Съедобные части", plant.edibleParts.joinToString(", ") )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        if (!plant.propagationMethods.isNullOrEmpty()){
-            ToggleView("Методы распространения", plant.propagationMethods.joinToString(", "))
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-
-        if (!plant.bestWatering.isNullOrBlank()){
-            ToggleView("Полив", plant.bestWatering )
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-        if (!plant.bestSoilType.isNullOrBlank()) {
-            ToggleView("Почва", plant.bestSoilType)
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-        if (!plant.bestLightCondition.isNullOrBlank()) {
-            ToggleView("Освещение", plant.bestLightCondition)
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-
-
-
     }
 }
 
