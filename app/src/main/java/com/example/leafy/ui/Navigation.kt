@@ -1,5 +1,6 @@
 package com.example.leafy.ui
 
+import CameraScreen
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
@@ -10,6 +11,7 @@ import com.example.leafy.ui.screens.listplant.ListPlantScreen
 import com.example.leafy.ui.screens.listplant.PlantViewModel
 import com.example.leafy.ui.screens.plantcard.PlantCardScreen
 
+
 @Composable
 fun Navigation(onThemeToggle: (Boolean) -> Unit, isDarkTheme: Boolean){
 
@@ -18,6 +20,7 @@ fun Navigation(onThemeToggle: (Boolean) -> Unit, isDarkTheme: Boolean){
     NavHost(navController = navController, startDestination = "listplant"){
         composable("listplant")  { ListPlantScreen(plantViewModel = plantViewModel, navController = navController, isDarkTheme = isDarkTheme, onThemeToggle = onThemeToggle) }
         composable("addplant")  { AddPlantScreen(navController = navController) }
+        composable("camera") { CameraScreen()}
         composable("plantcard/{plantName}") { backStackEntry ->
             val plantName = backStackEntry.arguments?.getString("plantName")
             PlantCardScreen(plantName = plantName ?: "", plantViewModel = plantViewModel, navController = navController)
