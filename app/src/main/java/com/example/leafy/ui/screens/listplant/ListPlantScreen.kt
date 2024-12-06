@@ -319,7 +319,7 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
                 color = Color.Black,
                 shape = RoundedCornerShape(16.dp)
             )
-            .background(Color.Green),
+            .background(Color.White),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -330,9 +330,9 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
             modifier = Modifier.weight(1f),
             singleLine = true,
             colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.White,
                 unfocusedTextColor = Color(0xFF4CAF50),
-                focusedContainerColor = Color.Transparent,
+                focusedContainerColor = Color.White,
                 focusedTextColor = Color(0xff222222)
             ),
         )
@@ -344,7 +344,7 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
                 .size(36.dp)
                 .offset(x = (-12).dp)
                 .clickable { plantViewModel.searchPlants(query = searchText) },
-            tint = Color.White
+            tint = Color.Gray
         )
     }
 
