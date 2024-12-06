@@ -25,7 +25,7 @@ class RetrofitModule {
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://plant.id/api/v3/")
+            .baseUrl("http://192.168.99.44:8080/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }

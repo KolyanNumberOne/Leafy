@@ -19,8 +19,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,7 +57,18 @@ import com.example.leafy.ui.screens.listplant.PlantViewModel
 
 @Composable
 fun PlantCardScreen(plantName: String, navController: NavController, plantViewModel: PlantViewModel) {
-    val plant = plantViewModel.getCurrentPlant(plantName)
+    val plant = plantViewModel.getPlantByName(plantName)
+
+    if (plant == null) {
+        Text(
+            text = "Растение не найдено",
+            modifier = Modifier.fillMaxSize(),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -97,7 +112,11 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        GeneralInf(plant.description.value)
+
+        if (!plant.description.value.isNullOrEmpty()) {
+            GeneralInf(plant.description.value)
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         if (!plant.commonNames.isNullOrEmpty()) {
@@ -124,15 +143,16 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        if (!plant.edible_parts.isNullOrEmpty()){
-            ToggleView("Съедобные части", plant.edible_parts.joinToString(", ") )
+        if (!plant.edibleParts.isNullOrEmpty()){
+            ToggleView("Съедобные части", plant.edibleParts.joinToString(", ") )
             Spacer(modifier = Modifier.height(12.dp))
         }
 
         if (!plant.propagationMethods.isNullOrEmpty()){
-            ToggleView("Методы распространения", plant.propagationMethods)
+            ToggleView("Методы распространения", plant.propagationMethods.joinToString(", "))
             Spacer(modifier = Modifier.height(12.dp))
         }
+
 
         if (!plant.bestWatering.isNullOrBlank()){
             ToggleView("Полив", plant.bestWatering )
@@ -146,6 +166,8 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             ToggleView("Освещение", plant.bestLightCondition)
             Spacer(modifier = Modifier.height(12.dp))
         }
+
+
 
 
     }
@@ -168,7 +190,7 @@ fun ToggleView(categoryName: String, body: String) {
             )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().clickable { isVisible = !isVisible },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -184,8 +206,7 @@ fun ToggleView(categoryName: String, body: String) {
                 contentDescription = "Search Icon",
                 modifier = Modifier
                     .size(36.dp)
-                    .offset(x = (-12).dp)
-                    .clickable { isVisible = !isVisible },
+                    .offset(x = (-12).dp),
                 tint = Color.Black,
             )
         }
