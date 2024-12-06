@@ -3,7 +3,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +44,17 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.leafy.ui.screens.listplant.PlantViewModel
 
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewPlantCardScreen() {
+//    val plantName = "Aloe Vera"
+//
+//    PlantCardScreen(
+//        plantName = plantName,
+//        navController = rememberNavController()
+//    )
+//}
+
 @Composable
 fun PlantCardScreen(plantName: String, navController: NavController, plantViewModel: PlantViewModel) {
     val plant = plantViewModel.getPlantByName(plantName)
@@ -68,10 +78,7 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth()
         ){
             Image(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -80,37 +87,6 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
                     .size(36.dp)
                     .clickable { navController.popBackStack() }
             )
-
-            var expanded by remember { mutableStateOf(false) }
-
-            Box() {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Добавить растение") },
-                        onClick = {
-                            expanded = false
-                            plantViewModel.addPlant(plant)
-                        }
-                    )
-                    if (plant.id != 0){
-                        DropdownMenuItem(
-                            text = { Text("Удалить растение") },
-                            onClick = {
-                                expanded = false
-                                plantViewModel.deletePlant(plant)
-                                navController.popBackStack()
-                            }
-                        )
-                    }
-                }
-            }
         }
         Text(
             plant.commonNames[0],
@@ -148,9 +124,35 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
             Spacer(modifier = Modifier.height(12.dp))
         }
         if (!plant.taxonomy.family.isNullOrBlank()) {
-            ToggleView("Семейство", plant.taxonomy.family)
+            ToggleView("Классификация", "Семейство: ${plant.taxonomy.family}\n" +
+                    "Род: ${plant.taxonomy.genus}\n" +
+                    "Тип: ${plant.taxonomy.phylum}\n" +
+                    "Порядок: ${plant.taxonomy.order}\n" +
+                    "Царство: ${plant.taxonomy.kingdom}\n"
+                    )
             Spacer(modifier = Modifier.height(12.dp))
         }
+
+        if (!plant.commonUses.isNullOrBlank()){
+            ToggleView("Использование", plant.commonUses )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.culturalSignificance.isNullOrBlank()){
+            ToggleView("Культурная значимость", plant.culturalSignificance )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.edibleParts.isNullOrEmpty()){
+            ToggleView("Съедобные части", plant.edibleParts.joinToString(", ") )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        if (!plant.propagationMethods.isNullOrEmpty()){
+            ToggleView("Методы распространения", plant.propagationMethods.joinToString(", "))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
 
         if (!plant.bestWatering.isNullOrBlank()){
             ToggleView("Полив", plant.bestWatering )
