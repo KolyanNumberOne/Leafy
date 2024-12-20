@@ -1,5 +1,9 @@
 package com.example.leafy.ui.screens.listplant
 
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.TextView
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,13 +56,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import com.example.leafy.R
 import com.example.leafy.data.models.PlantDetail
 
 
@@ -71,12 +78,31 @@ fun ListPlantScreen(
 {
     var checked by remember { mutableStateOf(true) }
 
+    val probability by plantViewModel.probability
+    val context = LocalContext.current
+
+    LaunchedEffect(probability) {
+        if (probability < 0.3 && probability > 0f) {
+
+            val inflater = LayoutInflater.from(context)
+            val layout: View = inflater.inflate(R.layout.custom_toast, null)
+
+
+            val toastText: TextView = layout.findViewById(R.id.toast_text)
+            toastText.text = "Растений на фото не обнаружено"
+
+            val toast = Toast(context)
+            toast.duration = Toast.LENGTH_SHORT
+            toast.view = layout
+            toast.show()
+        }
+    }
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primary)
         ) {
 
-            var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+            val selectedTabIndex by plantViewModel.selectedTabIndex.collectAsState()
             val titles = listOf("Мои растения", "Все растения ")
 
             Row(
@@ -115,7 +141,7 @@ fun ListPlantScreen(
                 titles.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
+                        onClick = { plantViewModel.updateSelectedTabIndex(index) },
                         text = { Text(text = title) },
                         unselectedContentColor = Color.LightGray,
                         selectedContentColor = Color.Green
@@ -127,7 +153,7 @@ fun ListPlantScreen(
 
             if (selectedTabIndex == 0) MyPlants(
                 plantViewModel,
-                onTabChange = { selectedTabIndex = it },
+                onTabChange = { plantViewModel.updateSelectedTabIndex(it) },
                 navController
             ) else AllPlants(plantViewModel, navController)
 
@@ -260,8 +286,21 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
     if (showAddPlantDialog) {
         AlertDialog(
             onDismissRequest = { showAddPlantDialog = false },
-            title = { Text("Добавить растение") },
-            text = { Text("Выберите, как вы хотите добавить растение:") },
+            title = {
+                Text(
+                    text = "Добавить растение",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = "Как вы хотите добавить растение?",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showAddPlantDialog = false
@@ -283,7 +322,7 @@ fun MyPlants(plantViewModel: PlantViewModel, onTabChange: (Int) -> Unit,  navCon
 }
 @Composable
 fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
-    var searchText by remember { mutableStateOf("") }
+    val searchText by plantViewModel.searchText
     val listPlant = plantViewModel.searchList.collectAsState()
     val listState = rememberLazyListState()
     val isLoading = remember { plantViewModel.isLoading }
@@ -307,7 +346,7 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
         TextField(
             value = searchText,
             onValueChange = {
-                searchText=it
+                plantViewModel.updateSearchText(it)
                 page = 1
                 plantViewModel.searchPlants(name = searchText, page = page)
                             },
@@ -341,6 +380,23 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
         modifier = Modifier
             .fillMaxSize()
     ) {
+        if (listPlant.value.isEmpty() && searchText.isNotEmpty() && !isLoading) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "По вашему запросу ничего не найдено.",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
         items(listPlant.value.size) { index ->
             PlantItem(plant= listPlant.value[index], navController = navController)
         }

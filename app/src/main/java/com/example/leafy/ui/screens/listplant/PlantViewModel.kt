@@ -1,6 +1,7 @@
 package com.example.leafy.ui.screens.listplant
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.platform.LocalContext
+
 
 @HiltViewModel
 class PlantViewModel @Inject constructor(
@@ -25,6 +30,10 @@ class PlantViewModel @Inject constructor(
         started = SharingStarted.Lazily,
         initialValue = emptyList()
     )
+    val searchText = mutableStateOf("")
+    private val _selectedTabIndex = MutableStateFlow(0)
+    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex
+//    val searchText: StateFlow<String> = _searchText
 
     val allPlants: StateFlow<List<PlantDetail>> = _allPlants
 //    val allPlants: Flow<PagingData<PlantDetail>> = plantRepository.getAllPlants()
@@ -35,6 +44,10 @@ class PlantViewModel @Inject constructor(
     private val _isLoading = mutableStateOf(false)
     val isLoading get() = _isLoading.value
 
+    private val _probability = mutableStateOf(0f)
+    val probability: State<Float> = _probability
+
+
     val sharedData = sharedPhotoRepository.sharedData
 
     init {
@@ -44,9 +57,36 @@ class PlantViewModel @Inject constructor(
 
     }
 
+    fun updateSelectedTabIndex(newIndex: Int) {
+        _selectedTabIndex.value = newIndex
+    }
+
+    fun updateSearchText(newText: String) {
+        searchText.value = newText
+    }
+
+    fun updateProbability(newProbability: Float) {
+        _probability.value = newProbability
+    }
     private fun observeSharedData() {
         viewModelScope.launch {
             sharedData.collect { newData ->
+                try {
+                    Log.d("поиск", newData)
+                    val content = plantRepository.imageSearch(image = newData)
+                    Log.d("ФОТО", content.result.classification.suggestions[0].name)
+                    val name = content.result.classification.suggestions[0].name
+                    val probability = content.result.classification.suggestions[0].probability
+                    updateProbability(probability)
+                    if (probability > 0.3){
+                        val res = plantRepository.sendMessage(content = name)
+                        updateSearchText(res.choices[0].message.content)
+                        searchPlants(name = res.choices[0].message.content, page = 1)
+                        updateSelectedTabIndex(1)
+                    }
+                } catch (e: Exception) {
+                    Log.e("Search Plant", "Ошибка при поиске растений по фото: ${e.message}")
+                }
             }
         }
     }
