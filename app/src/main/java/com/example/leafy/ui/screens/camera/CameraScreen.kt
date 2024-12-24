@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material3.Card
@@ -102,7 +101,8 @@ fun CameraScreen(viewModel: CameraViewModel = hiltViewModel(), navController: Na
                         Icon(
                             Icons.Outlined.Camera,
                             contentDescription = "Сделать фото",
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
 
@@ -110,7 +110,8 @@ fun CameraScreen(viewModel: CameraViewModel = hiltViewModel(), navController: Na
                         Icon(
                             Icons.Outlined.ImageSearch,
                             contentDescription = "Выбрать фото из галереи",
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }

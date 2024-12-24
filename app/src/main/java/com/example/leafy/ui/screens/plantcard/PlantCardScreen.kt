@@ -1,4 +1,8 @@
 package com.example.leafy.ui.screens.plantcard
+import android.annotation.SuppressLint
+import android.app.TimePickerDialog
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,14 +18,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -30,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,21 +57,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.leafy.ui.screens.listplant.PlantViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewPlantCardScreen() {
-//    val plantName = "Aloe Vera"
-//
-//    PlantCardScreen(
-//        plantName = plantName,
-//        navController = rememberNavController()
-//    )
-//}
-
+@SuppressLint("DefaultLocale")
 @Composable
 fun PlantCardScreen(plantName: String, navController: NavController, plantViewModel: PlantViewModel) {
     val plant = plantViewModel.getPlantByName(plantName)
+    val context = LocalContext.current
 
     if (plant == null) {
         Text(
@@ -73,6 +78,11 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
         )
         return
     }
+    plantViewModel.getNotificationsForPlant(plant.id)
+    Log.d("notification", plant.id.toString())
+    var showTimePickerDialog by remember { mutableStateOf(false) }
+    val plantNotifications by plantViewModel.plantNotification.collectAsState()
+
     Column (modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
@@ -209,6 +219,77 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
+            Button(
+                onClick = { showTimePickerDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(32.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                border = BorderStroke(1.dp, Color.Black)
+            ) {
+                Text("Установить уведомление")
+            }
+
+            if (showTimePickerDialog) {
+                TimePickerDialog(
+                    onDismissRequest = { showTimePickerDialog = false },
+                    onTimeSelected = { hour, minute ->
+                        showTimePickerDialog = false
+                        plantViewModel.scheduleNotificationForPlant(context, plant, hour, minute)
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn(
+                modifier = Modifier.height(100.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (plantNotifications.isEmpty()) {
+                    item {
+                        Text(
+                            text = "Нет уведомлений",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    items(plantNotifications.size) { index ->
+                        val notification = plantNotifications[index]
+                        val notificationTimeMillis = notification.notificationTime
+                        val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            .format(Date(notificationTimeMillis))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Вы запланировали уведомление на $formattedTime",
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = {
+                                    plantViewModel.cancelNotification(notificationId = notification.id, plantId = plant.id, context = context)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Удалить уведомление",
+                                    tint = Color.Red
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -285,3 +366,32 @@ fun GeneralInf(generalText: String){
         )
     }
 }
+
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    onTimeSelected: (Int, Int) -> Unit
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+
+    val dialog = TimePickerDialog(
+        context,
+        { _, selectedHour, selectedMinute ->
+            onTimeSelected(selectedHour, selectedMinute)
+            onDismissRequest()
+        },
+        hour,
+        minute,
+        true
+    )
+
+    dialog.setOnDismissListener {
+        onDismissRequest()
+    }
+
+    dialog.show()
+}
+

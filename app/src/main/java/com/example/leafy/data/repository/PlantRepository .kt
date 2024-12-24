@@ -2,13 +2,17 @@ package com.example.leafy.data.repository
 
 
 import com.example.leafy.data.local.database.PlantDao
+import com.example.leafy.data.local.database.PlantNotificationDao
+import com.example.leafy.data.models.AuthResponse
 import com.example.leafy.data.models.ChatRequest
 import com.example.leafy.data.models.ChatResponse
 import com.example.leafy.data.models.ImageSearchRequest
 import com.example.leafy.data.models.Message
 import com.example.leafy.data.models.PlantDetail
+import com.example.leafy.data.models.PlantNotification
 import com.example.leafy.data.models.PlantResponse
-import com.example.leafy.data.remote.api.OpenAIApiDataSource
+import com.example.leafy.data.remote.api.GigaChatApiDataSource
+import com.example.leafy.data.remote.api.GigaChatAuth
 import com.example.leafy.data.remote.api.PlantApiDataSource
 import com.example.leafy.data.remote.api.RemotePlantDataSource
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +22,9 @@ interface PlantRepository {
 
     val plants: Flow<List<PlantDetail>>
 
-    //fun getAllPlants(): Flow<PagingData<PlantDetail>>
+    suspend fun getNotificationsForPlant(plantId: Int): List<PlantNotification>
+
+    suspend fun deleteNotification(notificationId: Int)
 
     suspend fun addPlant(plant: PlantDetail)
 
@@ -30,15 +36,22 @@ interface PlantRepository {
 
     suspend fun imageSearch(image: String): PlantResponse
 
-    suspend fun sendMessage(content: String): ChatResponse
+    suspend fun sendMessage(token: String, content: String): ChatResponse
 
+    suspend fun insertNotification(notification: PlantNotification): Long
+
+    suspend fun getNotificationById(insertedId: Int): PlantNotification
+
+    suspend fun authentication(): AuthResponse
 }
 
 class PlantRepositoryImp @Inject constructor(
     private val plantDao: PlantDao,
+    private val plantNotificationDao: PlantNotificationDao,
     private val remotePlantDataSource: RemotePlantDataSource,
     private val plantApiDataSource: PlantApiDataSource,
-    private val openAIApiDataSource: OpenAIApiDataSource
+    private val openAIApiDataSource: GigaChatApiDataSource,
+    private val gigaChatAuth: GigaChatAuth
 ) : PlantRepository {
 //    override fun getAllPlants(): Flow<PagingData<PlantDetail>> {
 //        return Pager(
@@ -52,6 +65,8 @@ class PlantRepositoryImp @Inject constructor(
     override val plants: Flow<List<PlantDetail>> =
         plantDao.getAllPlants()
 
+    override suspend fun getNotificationsForPlant(plantId: Int): List<PlantNotification> = plantNotificationDao.getNotificationsForPlant(plantId = plantId)
+
     override suspend fun addPlant(plant: PlantDetail) = plantDao.insertPlant(plant)
 
     override suspend fun fetchPlantsByPage(page: Int): List<PlantDetail> = remotePlantDataSource.fetchPlantsByPage(page = page)
@@ -62,12 +77,22 @@ class PlantRepositoryImp @Inject constructor(
 
     override suspend fun imageSearch(image: String): PlantResponse = plantApiDataSource.imageSearch(requestBody = ImageSearchRequest(images = listOf(image)))
 
-    override suspend fun sendMessage(content: String): ChatResponse = openAIApiDataSource
-        .sendMessage(request = ChatRequest(
-            model = "GigaChat",
-            stream = false,
-            update_interval = 0,
-            messages = listOf(
-                Message(role = "system", content = "В ответе напиши только основное название растения, одно слово. Переведи название растения на русский язык: ${content}.")
-            )))
+    override suspend fun sendMessage(token: String, content: String): ChatResponse = openAIApiDataSource
+        .sendMessage( token = token,
+            request = ChatRequest(
+                model = "GigaChat",
+                stream = false,
+                update_interval = 0,
+                messages = listOf(
+                    Message(role = "system", content = "Назови только одно основное название растения на русском языке, без дополнительных слов или описаний: ${content}.")
+                )))
+
+    override suspend fun insertNotification(plantNotification: PlantNotification): Long {
+        return plantNotificationDao.insertPlantNotification(plantNotification)
+    }
+    override suspend fun deleteNotification(notificationId: Int) = plantNotificationDao.deleteNotification(notificationId = notificationId)
+
+    override suspend fun getNotificationById(insertedId: Int): PlantNotification = plantNotificationDao.getNotificationById(notificationId = insertedId)
+
+    override suspend fun authentication(): AuthResponse = gigaChatAuth.authentication()
 }

@@ -48,7 +48,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -78,15 +77,13 @@ fun ListPlantScreen(
 {
     var checked by remember { mutableStateOf(true) }
 
-    val probability by plantViewModel.probability
+    val showToast by plantViewModel.showToast.collectAsState(initial = false)
     val context = LocalContext.current
 
-    LaunchedEffect(probability) {
-        if (probability < 0.3 && probability > 0f) {
-
+    LaunchedEffect(showToast) {
+        if (showToast) {
             val inflater = LayoutInflater.from(context)
             val layout: View = inflater.inflate(R.layout.custom_toast, null)
-
 
             val toastText: TextView = layout.findViewById(R.id.toast_text)
             toastText.text = "Растений на фото не обнаружено"
@@ -95,6 +92,8 @@ fun ListPlantScreen(
             toast.duration = Toast.LENGTH_SHORT
             toast.view = layout
             toast.show()
+
+            plantViewModel.resetToastState()
         }
     }
         Column(
@@ -325,7 +324,7 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
     val searchText by plantViewModel.searchText
     val listPlant = plantViewModel.searchList.collectAsState()
     val listState = rememberLazyListState()
-    val isLoading = remember { plantViewModel.isLoading }
+    val isLoading = plantViewModel.isLoading.collectAsState()
     var page by remember { mutableIntStateOf(1) }
 
     Row(
@@ -377,10 +376,9 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
     LazyColumn(
         state = listState,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
-        if (listPlant.value.isEmpty() && searchText.isNotEmpty() && !isLoading) {
+        if (listPlant.value.isEmpty() && searchText.isNotEmpty() && !isLoading.value) {
             item {
                 Box(
                     modifier = Modifier
@@ -400,7 +398,7 @@ fun AllPlants(plantViewModel: PlantViewModel, navController: NavController){
         items(listPlant.value.size) { index ->
             PlantItem(plant= listPlant.value[index], navController = navController)
         }
-        if (isLoading) {
+        if (isLoading.value) {
             item {
                 Box(
                     modifier = Modifier.size(60.dp),

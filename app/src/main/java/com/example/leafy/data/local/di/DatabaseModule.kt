@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.leafy.data.local.database.AppDatabase
 import com.example.leafy.data.local.database.PlantDao
+import com.example.leafy.data.local.database.PlantNotificationDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,6 +19,11 @@ class DatabaseModule {
     @Provides
     fun providePlantDao(appDatabase: AppDatabase): PlantDao {
         return appDatabase.plantDao()
+    }
+
+    @Provides
+    fun providePlantNotificationDao(appDatabase: AppDatabase): PlantNotificationDao {
+        return appDatabase.plantNotificationDao()
     }
 
     @Provides

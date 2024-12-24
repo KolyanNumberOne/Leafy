@@ -1,7 +1,11 @@
 package com.example.leafy.ui.screens.listplant
 
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,9 +19,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.platform.LocalContext
+import com.example.leafy.data.NotificationReceiver
+import com.example.leafy.data.models.PlantNotification
+import kotlinx.coroutines.withTimeout
+import java.util.Calendar
 
 
 @HiltViewModel
@@ -30,31 +35,35 @@ class PlantViewModel @Inject constructor(
         started = SharingStarted.Lazily,
         initialValue = emptyList()
     )
+    val allPlants: StateFlow<List<PlantDetail>> = _allPlants
+
     val searchText = mutableStateOf("")
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex
-//    val searchText: StateFlow<String> = _searchText
 
-    val allPlants: StateFlow<List<PlantDetail>> = _allPlants
-//    val allPlants: Flow<PagingData<PlantDetail>> = plantRepository.getAllPlants()
-//        .cachedIn(viewModelScope)
     private val _searchList = MutableStateFlow<List<PlantDetail>>(emptyList())
     val searchList: StateFlow<List<PlantDetail>> = _searchList
 
-    private val _isLoading = mutableStateOf(false)
-    val isLoading get() = _isLoading.value
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading : StateFlow<Boolean> = _isLoading
 
-    private val _probability = mutableStateOf(0f)
-    val probability: State<Float> = _probability
-
+    private val _showToast = MutableStateFlow(false)
+    val showToast: StateFlow<Boolean> = _showToast
 
     val sharedData = sharedPhotoRepository.sharedData
+
+    private val _plantNotification = MutableStateFlow<List<PlantNotification>>(emptyList())
+    val plantNotification: StateFlow<List<PlantNotification>> = _plantNotification
 
     init {
         searchPlants(name = "", page = 1)
         observeSharedData()
-        Log.d("ALLPLANT", "${allPlants}")
+    }
 
+    fun getNotificationsForPlant(plantId: Int){
+        viewModelScope.launch {
+            _plantNotification.value = plantRepository.getNotificationsForPlant(plantId = plantId)
+        }
     }
 
     fun updateSelectedTabIndex(newIndex: Int) {
@@ -65,8 +74,12 @@ class PlantViewModel @Inject constructor(
         searchText.value = newText
     }
 
-    fun updateProbability(newProbability: Float) {
-        _probability.value = newProbability
+    fun showToastState() {
+        _showToast.value = true
+    }
+
+    fun resetToastState() {
+        _showToast.value = false
     }
     private fun observeSharedData() {
         viewModelScope.launch {
@@ -76,13 +89,15 @@ class PlantViewModel @Inject constructor(
                     val content = plantRepository.imageSearch(image = newData)
                     Log.d("ФОТО", content.result.classification.suggestions[0].name)
                     val name = content.result.classification.suggestions[0].name
-                    val probability = content.result.classification.suggestions[0].probability
-                    updateProbability(probability)
-                    if (probability > 0.3){
-                        val res = plantRepository.sendMessage(content = name)
+                    val prob = content.result.classification.suggestions[0].probability
+                    if (prob > 0.3){
+                        updateSelectedTabIndex(1)
+                        val res = plantRepository.sendMessage(token = "Bearer ${plantRepository.authentication().accessToken}",content = name)
                         updateSearchText(res.choices[0].message.content)
                         searchPlants(name = res.choices[0].message.content, page = 1)
-                        updateSelectedTabIndex(1)
+                    }
+                    else{
+                        showToastState()
                     }
                 } catch (e: Exception) {
                     Log.e("Search Plant", "Ошибка при поиске растений по фото: ${e.message}")
@@ -96,15 +111,17 @@ class PlantViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                if (page == 1) {
-                    clearSearchList()
-                }
-                if (name.isBlank()) {
-                    val response = plantRepository.fetchPlantsByPage(page = page)
-                    _searchList.value += response
-                } else {
-                    val response = plantRepository.searchPlantsByName(name = name, page = page)
-                    _searchList.value += response
+                withTimeout(3000) {
+                    if (page == 1) {
+                        clearSearchList()
+                    }
+                    if (name.isBlank()) {
+                        val response = plantRepository.fetchPlantsByPage(page = page)
+                        _searchList.value += response
+                    } else {
+                        val response = plantRepository.searchPlantsByName(name = name, page = page)
+                        _searchList.value += response
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Search Plant", "Ошибка при поиске растений: ${e.message}")
@@ -143,5 +160,68 @@ class PlantViewModel @Inject constructor(
 
     fun clearSearchList() {
         _searchList.value = emptyList()
+    }
+
+
+    @SuppressLint("ScheduleExactAlarm")
+    fun scheduleNotificationForPlant(context: Context, plant: PlantDetail, hour: Int, minute: Int) {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+        }
+
+        val notificationTime = calendar.timeInMillis
+        val plantNotification = PlantNotification(
+            plantId = plant.id,
+            notificationTime = notificationTime,
+            message = "Время для ухода: ${plant.commonNames[0]}"
+        )
+
+
+        viewModelScope.launch {
+            val insertedId = plantRepository.insertNotification(plantNotification)
+            val insertedNotification = plantRepository.getNotificationById(insertedId.toInt())
+            scheduleNotification(context, insertedNotification)
+        }
+    }
+
+    @SuppressLint("ScheduleExactAlarm")
+    fun scheduleNotification(context: Context, plantNotification: PlantNotification) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, NotificationReceiver::class.java).apply {
+            putExtra("message", plantNotification.message)
+        }
+
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            plantNotification.id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            plantNotification.notificationTime,
+            pendingIntent
+        )
+    }
+    fun cancelNotification(context: Context, plantId: Int, notificationId: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, NotificationReceiver::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        alarmManager.cancel(pendingIntent)
+
+        viewModelScope.launch {
+            plantRepository.deleteNotification(notificationId)
+            getNotificationsForPlant(plantId = plantId)
+        }
     }
 }

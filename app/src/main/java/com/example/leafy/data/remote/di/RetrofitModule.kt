@@ -1,6 +1,7 @@
 package com.example.leafy.data.remote.di
 
-import com.example.leafy.data.remote.api.OpenAIApiDataSource
+import com.example.leafy.data.remote.api.GigaChatApiDataSource
+import com.example.leafy.data.remote.api.GigaChatAuth
 import com.example.leafy.data.remote.api.PlantApiDataSource
 import com.example.leafy.data.remote.api.RemotePlantDataSource
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -20,21 +21,18 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 fun createUnsafeOkHttpClient(): OkHttpClient {
-    // Создаем кастомный TrustManager, который игнорирует все сертификаты
     val trustAllCertificates = object : X509TrustManager {
-        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf() // Возвращаем пустой массив
+        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
         override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
     }
 
-    // Инициализируем SSLContext с кастомным TrustManager
     val sslContext = SSLContext.getInstance("TLS")
     sslContext.init(null, arrayOf<TrustManager>(trustAllCertificates), java.security.SecureRandom())
 
-    // Создаем OkHttpClient с кастомным SSLContext
     return OkHttpClient.Builder()
         .sslSocketFactory(sslContext.socketFactory, trustAllCertificates)
-        .hostnameVerifier { _, _ -> true } // Игнорируем проверку имени хоста
+        .hostnameVerifier { _, _ -> true }
         .build()
 }
 
@@ -59,14 +57,18 @@ class RetrofitModule {
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
-    annotation class OpenAI
+    annotation class GigaChat
+
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class AuthGigaChat
 
     @Provides
     @Singleton
     @Host
     fun providePlantRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.1.245:8080/")
+            .baseUrl("http://62.113.97.245:8080/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
@@ -80,10 +82,11 @@ class RetrofitModule {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
+
     @Provides
     @Singleton
-    @OpenAI
-    fun provideOpenAIApiDataSource(): Retrofit {
+    @GigaChat
+    fun provideGigaChatApiDataSource(): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://gigachat.devices.sberbank.ru/api/v1/")
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
@@ -93,8 +96,24 @@ class RetrofitModule {
 
     @Provides
     @Singleton
-    fun provideOpenAIApi(@OpenAI retrofit: Retrofit): OpenAIApiDataSource =
-        retrofit.create(OpenAIApiDataSource::class.java)
+    @AuthGigaChat
+    fun provideGigaChatAuthR(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://ngw.devices.sberbank.ru:9443/api/v2/")
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGigaChatAuth(@AuthGigaChat retrofit: Retrofit): GigaChatAuth =
+        retrofit.create(GigaChatAuth::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGigaChatApi(@GigaChat retrofit: Retrofit): GigaChatApiDataSource =
+        retrofit.create(GigaChatApiDataSource::class.java)
 
     @Provides
     @Singleton

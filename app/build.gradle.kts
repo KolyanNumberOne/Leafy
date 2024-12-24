@@ -38,6 +38,7 @@ android {
         // Add API key
         buildConfigField("String", "API_KEY", apikeyProperties["API_KEY"].toString())
         buildConfigField("String", "API_GIGACHAT", apikeyProperties["API_GIGACHAT"].toString())
+        buildConfigField("String", "API_GOOGLE", apikeyProperties["API_GOOGLE"].toString())
     }
 
     compileOptions {
@@ -61,6 +62,25 @@ android {
     }
     buildToolsVersion = "34.0.0"
 }
+
+//tasks.register("generateGoogleServicesJson") {
+//    doLast {
+//        val templateFile = file("google-services.json")
+//        val outputFile = file("google-services.json")
+//        val apiKey = apikeyProperties["API_GOOGLE"]
+//
+//        if (templateFile.exists()) {
+//            val content = templateFile.readText().replace("\${API_GOOGLE}", apiKey.toString())
+//            outputFile.writeText(content)
+//        } else {
+//            throw FileNotFoundException("Шаблон google-services.template.json не найден!")
+//        }
+//    }
+//}
+//
+//tasks.named("preBuild") {
+//    dependsOn("generateGoogleServicesJson")
+//}
 
 // Allowing code autogeneration
 kapt {
@@ -141,7 +161,7 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-analytics")
-    }
+}
 
 
 
