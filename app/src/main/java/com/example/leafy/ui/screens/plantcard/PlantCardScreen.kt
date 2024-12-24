@@ -219,72 +219,75 @@ fun PlantCardScreen(plantName: String, navController: NavController, plantViewMo
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Button(
-                onClick = { showTimePickerDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(32.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                border = BorderStroke(1.dp, Color.Black)
-            ) {
-                Text("Установить уведомление")
-            }
+            if (plant.id != 0) {
+                Button(
+                    onClick = { showTimePickerDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(32.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = BorderStroke(1.dp, Color.Black)
+                ) {
+                    Text("Установить уведомление")
+                }
 
-            if (showTimePickerDialog) {
-                TimePickerDialog(
-                    onDismissRequest = { showTimePickerDialog = false },
-                    onTimeSelected = { hour, minute ->
-                        showTimePickerDialog = false
-                        plantViewModel.scheduleNotificationForPlant(context, plant, hour, minute)
-                    }
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn(
-                modifier = Modifier.height(100.dp).fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (plantNotifications.isEmpty()) {
-                    item {
-                        Text(
-                            text = "Нет уведомлений",
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                } else {
-                    items(plantNotifications.size) { index ->
-                        val notification = plantNotifications[index]
-                        val notificationTimeMillis = notification.notificationTime
-                        val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault())
-                            .format(Date(notificationTimeMillis))
+                if (showTimePickerDialog) {
+                    TimePickerDialog(
+                        onDismissRequest = { showTimePickerDialog = false },
+                        onTimeSelected = { hour, minute ->
+                            showTimePickerDialog = false
+                            plantViewModel.scheduleNotificationForPlant(context, plant, hour, minute)
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                LazyColumn(
+                    modifier = Modifier.height(100.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (plantNotifications.isEmpty()) {
+                        item {
                             Text(
-                                text = "Вы запланировали уведомление на $formattedTime",
-                                fontSize = 14.sp,
-                                modifier = Modifier.weight(1f)
+                                text = "Нет уведомлений",
+                                fontSize = 18.sp,
+                                modifier = Modifier.padding(16.dp)
                             )
-                            IconButton(
-                                onClick = {
-                                    plantViewModel.cancelNotification(notificationId = notification.id, plantId = plant.id, context = context)
-                                }
+                        }
+                    } else {
+                        items(plantNotifications.size) { index ->
+                            val notification = plantNotifications[index]
+                            val notificationTimeMillis = notification.notificationTime
+                            val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                .format(Date(notificationTimeMillis))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Удалить уведомление",
-                                    tint = Color.Red
+                                Text(
+                                    text = "Вы запланировали уведомление на $formattedTime",
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                IconButton(
+                                    onClick = {
+                                        plantViewModel.cancelNotification(notificationId = notification.id, plantId = plant.id, context = context)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Удалить уведомление",
+                                        tint = Color.Red
+                                    )
+                                }
                             }
                         }
                     }

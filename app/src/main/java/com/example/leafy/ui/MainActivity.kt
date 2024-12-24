@@ -2,6 +2,7 @@ package com.example.leafy.ui
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -24,8 +25,6 @@ import com.example.leafy.ui.theme.PlantGuideTheme
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 
-
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val permissionsRequired = arrayOf(
@@ -41,12 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         checkPermissions()
-
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        if (!alarmManager.canScheduleExactAlarms()) {
-            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-            startActivity(intent)
-        }
+        checkExactAlarmPermission()
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -58,7 +52,6 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-
             var isDarkTheme by rememberSaveable { mutableStateOf(true) }
 
             PlantGuideTheme(darkTheme = isDarkTheme) {
@@ -86,16 +79,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun checkExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                showExactAlarmPermissionDialog()
+            }
+        }
+    }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun showExactAlarmPermissionDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Требуется разрешение для уведомлений")
+            .setMessage("Для работы уведомлений необходимо разрешение. Вы хотите предоставить его?")
+            .setPositiveButton("Да") { _, _ ->
+                requestExactAlarmPermission()
+            }
+            .setNegativeButton("Нет") { _, _ ->
+                Toast.makeText(
+                    this,
+                    "Разрешение не предоставлено. Уведомления не будут работать.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            .show()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun requestExactAlarmPermission() {
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+        startActivity(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE) {
             if (grantResults.all { it == android.content.pm.PackageManager.PERMISSION_GRANTED }) {
-                //Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, "Все разрешения предоставлены.", Toast.LENGTH_SHORT).show()
             } else {
-                //Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, "Некоторые разрешения отклонены.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
-
